@@ -117,6 +117,11 @@ public class StubGenerator {
     }
   }
 
+  /** Invokes the stubbed behavior of the given method. */
+  public static Object invokeCast(Class<?> returnType, String className, String methodName) {
+    return Mockito.mock(returnType, new ReturnsCustomMocks());
+  }
+
   private static boolean declaringClassIs(CtMethod method, Class<?> clazz) {
     return method.getDeclaringClass().getName().replace('$', '.')
         .equals(clazz.getCanonicalName());
