@@ -45,6 +45,7 @@ public class JSEngine {
     
     public static Object eval(String uuid, String expr) throws Exception {
         Bindings bindings = getBindings(uuid);
+        System.out.println("**** EVAL [" + uuid + "] " + expr);
         return engine.eval(expr, bindings);
     }
     

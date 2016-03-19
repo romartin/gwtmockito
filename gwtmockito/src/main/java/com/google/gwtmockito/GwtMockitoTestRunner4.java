@@ -453,17 +453,32 @@ public class GwtMockitoTestRunner4 extends BlockJUnit4ClassRunner {
         
         final String uuid = UUID.randomUUID().toString();
 
+        CtConstructor[] constructors = clazz.getDeclaredConstructors();
+        if ( constructors.length > 0 ) {
+          for ( CtConstructor constructor : constructors ) {
+            // constructor.setModifiers(constructor.getModifiers() & ~Modifier.PROTECTED);
+          }
+        }
+        
         for (final CtMethod method : clazz.getDeclaredMethods()) {
           // Public native methods.
           if ( method.getModifiers() >= 256 ) {
             final CtClass returnClass = method.getReturnType();
             final boolean isVoid = returnClass == null || "void".equals(returnClass.getName());
             final boolean isJSO = !isVoid && isOverlayType(pool, returnClass);
+            final boolean isCreateJSO = "createArray".equals(method.getName()) || "createFunction".equals(method.getName()) || "createObject".equals(method.getName());
             
             JavaSourceParser.getNativeCode(name, method.getName(), method.getParameterTypes().length, new JavaSourceParser.Callback() {
               @Override
               public void onNativeMethod(final String[] argNames, final String code) {
                 method.setModifiers(method.getModifiers() & ~Modifier.NATIVE);
+                
+                String uuidBlock = isCreateJSO ? "\"" + uuid + "\"" : "getUuid()";
+                // Keep createArray, createFunction and createObject native methods static static.
+                if ( !isCreateJSO ) {
+                  method.setModifiers(method.getModifiers() & ~Modifier.STATIC);
+                }
+                
                 try {
 
                   StringBuilder wrappedCode = new StringBuilder(" { ");
@@ -471,7 +486,7 @@ public class GwtMockitoTestRunner4 extends BlockJUnit4ClassRunner {
                   if ( null != argNames ) {
                     int x = 0;
                     for (String argName : argNames) {
-                      String cc = String.format(" com.google.gwtmockito.JSEngine.push(\"%s\", \"%s\", %s);", uuid, argName, "$" + (x + 1) );
+                      String cc = String.format(" com.google.gwtmockito.JSEngine.push(%s, \"%s\", %s);", uuidBlock, argName, "$" + (x + 1) );
                       wrappedCode.append(cc).append("\n");
                       x++;
                     }
@@ -479,11 +494,21 @@ public class GwtMockitoTestRunner4 extends BlockJUnit4ClassRunner {
                   
                   String replacedCode = code.replaceAll("this", "theObject");
 
-                  String c = String.format(" %s com.google.gwtmockito.JSEngine.eval(\"%s\", \"%s\"); %s", 
-                          !isVoid && !isJSO ? "return (" + returnClass.getName() + ") " : "", 
-                          uuid,  
+                  if ( !isVoid && !isCreateJSO ) {
+                    replacedCode = "(function() { " + replacedCode + " })();";
+                  }
+                  /*
+                  
+                  (function() {
+                    alert('foo');
+                  })();
+                  
+                   */
+                  String c = String.format(" %s com.google.gwtmockito.JSEngine.eval(%s, \"%s\"); %s", 
+                          !isVoid && !isJSO ? " return (" + returnClass.getName() + ") " : "", 
+                          uuidBlock,
                           replacedCode,
-                          isJSO ? "return com.google.gwt.core.client.JavaScriptObject.build(\"" + name + "\", \"" + uuid + "\");" : "");
+                          isJSO ? "return new com.google.gwt.core.client.JavaScriptObject(\"" + uuid + "\");" : "");
                   wrappedCode.append(c);
                   
                   wrappedCode.append(" } ");
@@ -501,22 +526,29 @@ public class GwtMockitoTestRunner4 extends BlockJUnit4ClassRunner {
           
         }
 
-        /*if ( !"com.google.gwt.core.client.JavaScriptObject".equals(name) ) {
+        if ( !"com.google.gwt.core.client.JavaScriptObject".equals(name) ) {
           for (final CtMethod method : clazz.getMethods()) {
             if ( isCastMethod(method.getName()) ) {
-              CtClass returnType = method.getReturnType();
+
               method.setModifiers(method.getModifiers() & ~Modifier.FINAL);
               String cBody = String.format("{ %s ret = new %s();\n" +
-                              "        ret.uuid = \"%s\";\n" +
+                              "        ret.uuid = getUuid();\n" +
                               "        return ($r) ret; }",
                       name,
-                      name,
+                      name);
+
+              method.setBody(cBody);
+
+            } /*else if ( "getUuid".equals(method.getName()) ) {
+
+              String cBody = String.format("{ return \"%s\"; }",
                       uuid);
 
               method.setBody(cBody);
-            }
+
+            }*/
           }
-        }*/
+        }
         
         
         return true;
