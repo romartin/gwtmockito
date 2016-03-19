@@ -450,13 +450,14 @@ public class GwtMockitoTestRunner4 extends BlockJUnit4ClassRunner {
       if ( isOverlayType(pool, clazz) ) {
 
         System.out.println("Native methods for '" + name + "'");
-        
-        //final String uuid = java.util.UUID.randomUUID().toString();
 
+        // Make protected constructor for overlay types public in the test scope classpath.
         CtConstructor[] constructors = clazz.getDeclaredConstructors();
         if ( constructors.length > 0 ) {
           for ( CtConstructor constructor : constructors ) {
-            // constructor.setModifiers(constructor.getModifiers() & ~Modifier.PROTECTED);
+            if ( ! javassist.Modifier.isPublic(constructor.getModifiers()) ) {
+              constructor.setModifiers(javassist.Modifier.setPublic(constructor.getModifiers()));
+            }
           }
         }
         
