@@ -451,7 +451,7 @@ public class GwtMockitoTestRunner4 extends BlockJUnit4ClassRunner {
 
         System.out.println("Native methods for '" + name + "'");
         
-        final String uuid = UUID.randomUUID().toString();
+        //final String uuid = java.util.UUID.randomUUID().toString();
 
         CtConstructor[] constructors = clazz.getDeclaredConstructors();
         if ( constructors.length > 0 ) {
@@ -472,49 +472,51 @@ public class GwtMockitoTestRunner4 extends BlockJUnit4ClassRunner {
               @Override
               public void onNativeMethod(final String[] argNames, final String code) {
                 method.setModifiers(method.getModifiers() & ~Modifier.NATIVE);
-                
-                String uuidBlock = isCreateJSO ? "\"" + uuid + "\"" : "getUuid()";
-                // Keep createArray, createFunction and createObject native methods static static.
+
+                StringBuilder wrappedCode = new StringBuilder(" { ");
+                String uuidBlock = null;
+                String preffix = null;
                 if ( !isCreateJSO ) {
                   method.setModifiers(method.getModifiers() & ~Modifier.STATIC);
+                  preffix = "";
+                  uuidBlock = "getUuid()";
+                } else {
+                  preffix = "String _uuid = java.util.UUID.randomUUID().toString(); ";
+                  uuidBlock = "_uuid";
                 }
-                
+                wrappedCode.append(preffix);
+
+                // Push method arguments into JS context bindings.
+                if ( null != argNames ) {
+                  int x = 0;
+                  for (String argName : argNames) {
+                    String cc = String.format(" com.google.gwtmockito.JSEngine.push(%s, \"%s\", %s);", uuidBlock, argName, "$" + (x + 1) );
+                    wrappedCode.append(cc).append("\n");
+                    x++;
+                  }
+                }
+
+                // Use the js native code from sources by doing some replaces...
+                String replacedCode = code.replaceAll("this", "theObject");
+                if ( !isVoid && !isCreateJSO ) {
+                  replacedCode = "(function() { " + replacedCode + " })();";
+                }
+
                 try {
 
-                  StringBuilder wrappedCode = new StringBuilder(" { ");
-
-                  if ( null != argNames ) {
-                    int x = 0;
-                    for (String argName : argNames) {
-                      String cc = String.format(" com.google.gwtmockito.JSEngine.push(%s, \"%s\", %s);", uuidBlock, argName, "$" + (x + 1) );
-                      wrappedCode.append(cc).append("\n");
-                      x++;
-                    }
-                  }
-                  
-                  String replacedCode = code.replaceAll("this", "theObject");
-
-                  if ( !isVoid && !isCreateJSO ) {
-                    replacedCode = "(function() { " + replacedCode + " })();";
-                  }
-                  /*
-                  
-                  (function() {
-                    alert('foo');
-                  })();
-                  
-                   */
-                  String c = String.format(" %s com.google.gwtmockito.JSEngine.eval(%s, \"%s\"); %s", 
-                          !isVoid && !isJSO ? " return (" + returnClass.getName() + ") " : "", 
+                  // Build and set the new method body using javassist.
+                  String c = String.format(" %s com.google.gwtmockito.JSEngine.eval(%s, \"%s\"); %s",
+                          !isVoid && !isJSO ? " return (" + returnClass.getName() + ") " : "",
                           uuidBlock,
                           replacedCode,
-                          isJSO ? "return new com.google.gwt.core.client.JavaScriptObject(\"" + uuid + "\");" : "");
+                          isJSO ? "return new com.google.gwt.core.client.JavaScriptObject(" + uuidBlock + ");" : "");
                   wrappedCode.append(c);
-                  
+  
                   wrappedCode.append(" } ");
                   System.out.println("[" + method.getName() + "] **** " + wrappedCode.toString());
-
+  
                   method.setBody(wrappedCode.toString());
+  
                   
                 } catch (Exception e) {
                   e.printStackTrace();
@@ -526,6 +528,8 @@ public class GwtMockitoTestRunner4 extends BlockJUnit4ClassRunner {
           
         }
 
+        // Override "cast" methods body for overlay types, in order to return the concrete class impl 
+        // but keeping the JSO uuid reference used in test scope.
         if ( !"com.google.gwt.core.client.JavaScriptObject".equals(name) ) {
           for (final CtMethod method : clazz.getMethods()) {
             if ( isCastMethod(method.getName()) ) {
@@ -539,14 +543,7 @@ public class GwtMockitoTestRunner4 extends BlockJUnit4ClassRunner {
 
               method.setBody(cBody);
 
-            } /*else if ( "getUuid".equals(method.getName()) ) {
-
-              String cBody = String.format("{ return \"%s\"; }",
-                      uuid);
-
-              method.setBody(cBody);
-
-            }*/
+            } 
           }
         }
         
