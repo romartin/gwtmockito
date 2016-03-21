@@ -30,15 +30,15 @@ import com.google.gwtmockito.fakes.FakeProvider;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.internal.runners.JUnit4ClassRunner;
 import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
 
 /**
  * Tests for {@link GwtMockito} when not running with
  * {@link GwtMockitoTestRunner}, as would be the case for JUnit3 or in tests
  * that must use a different runner.
  */
-@RunWith(JUnit4.class)
+@RunWith(JUnit4ClassRunner.class)
 public class GwtMockitoRunnerlessTest {
 
   @GwtMock SampleInterface mockedInterface;

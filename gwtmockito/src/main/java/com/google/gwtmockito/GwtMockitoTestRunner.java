@@ -15,6 +15,7 @@
  */
 package com.google.gwtmockito;
 
+import com.google.gwt.dev.generator.ast.Statement;
 import javassist.CannotCompileException;
 import javassist.ClassPool;
 import javassist.CtClass;
@@ -58,17 +59,14 @@ import com.google.gwt.user.client.ui.VerticalPanel;
 import com.google.gwt.user.client.ui.Widget;
 import com.google.gwtmockito.impl.StubGenerator;
 
+import org.junit.internal.runners.InitializationError;
+import org.junit.internal.runners.JUnit4ClassRunner;
+import org.junit.internal.runners.TestClass;
 import org.junit.runner.Description;
 import org.junit.runner.Result;
 import org.junit.runner.notification.Failure;
 import org.junit.runner.notification.RunListener;
 import org.junit.runner.notification.RunNotifier;
-import org.junit.runners.BlockJUnit4ClassRunner;
-import org.junit.runners.ParentRunner;
-import org.junit.runners.model.FrameworkMethod;
-import org.junit.runners.model.InitializationError;
-import org.junit.runners.model.Statement;
-import org.junit.runners.model.TestClass;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
@@ -79,7 +77,7 @@ import java.util.List;
 
 /**
  * A JUnit4 test runner that executes a test using GwtMockito. In addition to
- * the standard {@link BlockJUnit4ClassRunner} features, a test executed with
+ * the standard {@link JUnit4ClassRunner} features, a test executed with
  * {@link GwtMockitoTestRunner} will behave as follows:
  *
  * <ul>
@@ -106,7 +104,7 @@ import java.util.List;
  * @see GwtMockito
  * @author ekuefler@google.com (Erik Kuefler)
  */
-public class GwtMockitoTestRunner extends BlockJUnit4ClassRunner {
+public class GwtMockitoTestRunner extends JUnit4ClassRunner {
 
   private final Class<?> unitTestClass;
   private final ClassLoader gwtMockitoClassLoader;
@@ -151,12 +149,13 @@ public class GwtMockitoTestRunner extends BlockJUnit4ClassRunner {
       // custom-loaded class. As of JUnit 4.12, "fTestClass" was renamed to "testClass".
       Field testClassField;
       try {
-        testClassField = ParentRunner.class.getDeclaredField("fTestClass");
+        testClassField = JUnit4ClassRunner.class.getDeclaredField("fTestClass");
       } catch (NoSuchFieldException e) {
-        testClassField = ParentRunner.class.getDeclaredField("testClass");
+        testClassField = JUnit4ClassRunner.class.getDeclaredField("testClass");
       }
       testClassField.setAccessible(true);
       testClassField.set(this, new TestClass(customLoadedTestClass));
+     
     } catch (Exception e) {
       throw new InitializationError(e);
     } finally {
@@ -312,10 +311,7 @@ public class GwtMockitoTestRunner extends BlockJUnit4ClassRunner {
     Thread.currentThread().setContextClassLoader(gwtMockitoClassLoader);
     RunNotifier wrapperNotifier = new RunNotifier();
     wrapperNotifier.addListener(new RunListener() {
-      @Override
-      public void testAssumptionFailure(Failure failure) {
-        notifier.fireTestAssumptionFailed(failure);
-      }
+      
       @Override
       public void testFailure(Failure failure) throws Exception {
         if (failure.getException() instanceof ClassCastException
@@ -373,13 +369,12 @@ public class GwtMockitoTestRunner extends BlockJUnit4ClassRunner {
     }
   }
 
-  /**
-   * Overridden to invoke GwtMockito.initMocks before starting each test.
-   */
+  
+
   @Override
-  @SuppressWarnings("deprecation") // Currently the only way to support befores
-  protected final Statement withBefores(FrameworkMethod method, Object target,
-      Statement statement) {
+  protected Object createTest() throws Exception {
+    Object target =  super.createTest();
+
     try {
       // Invoke initMocks on the version of GwtMockito that was loaded via our custom classloader.
       // This is necessary to ensure that it uses the same set of classes as the unit test class,
@@ -388,7 +383,8 @@ public class GwtMockitoTestRunner extends BlockJUnit4ClassRunner {
     } catch (Exception e) {
       throw new RuntimeException(e);
     }
-    return super.withBefores(method, target, statement);
+    
+    return target;
   }
 
   /** Custom classloader that performs additional modifications to loaded classes. */

@@ -20,8 +20,8 @@ import static org.junit.Assert.assertEquals;
 import com.google.gwtmockito.OveriddenRunnerTest.MyGwtMockitoTestRunner;
 
 import org.junit.Test;
+import org.junit.internal.runners.InitializationError;
 import org.junit.runner.RunWith;
-import org.junit.runners.model.InitializationError;
 
 import java.util.Collection;
 

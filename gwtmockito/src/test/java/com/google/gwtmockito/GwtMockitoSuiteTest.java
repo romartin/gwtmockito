@@ -18,8 +18,8 @@ package com.google.gwtmockito;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.internal.runners.JUnit4ClassRunner;
 import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
 import org.junit.runners.Suite;
 import org.junit.runners.Suite.SuiteClasses;
 
@@ -47,7 +47,7 @@ public class GwtMockitoSuiteTest {
   }
 
   /** A test using the default runner */
-  @RunWith(JUnit4.class)
+  @RunWith(JUnit4ClassRunner.class)
   public static class MyOtherTest {
     @Test
     public void testShouldHaveResetContextClassLoader() {

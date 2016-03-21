@@ -29,8 +29,8 @@ import com.google.gwtmockito.fakes.FakeProvider;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.internal.runners.JUnit4ClassRunner;
 import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
 
 import sample.MyWidget.DataProvider;
 
@@ -39,7 +39,7 @@ import sample.MyWidget.DataProvider;
  * things will still work, though it gets a bit more verbose. Most tests should
  * look like {@link MyWidgetTest} instead.
  */
-@RunWith(JUnit4.class)
+@RunWith(JUnit4ClassRunner.class)
 public class MyWidgetTestWithoutRunner {
 
   @GwtMock private DataProvider dataProvider;
