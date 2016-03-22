@@ -21,17 +21,14 @@ public class OverlayTypeClassLoaderInterceptor implements ClassLoaderInterceptor
     private static final Map<String, String> OVERLAY_CLASS_TRANSLATIONS = new HashMap<String, String>() {{
         put("com.ait.lienzo.client.core.types.Transform$TransformJSO", "com.google.gwtmockito.lienzo.stub.TransformJSO");
         put("com.ait.tooling.nativetools.client.NObjectJSO", "com.google.gwtmockito.lienzo.stub.NObjectJSO");
+        put("com.ait.tooling.nativetools.client.NArrayBaseJSO", "com.google.gwtmockito.lienzo.stub.NArrayBaseJSO");
+        put("com.ait.tooling.nativetools.client.collection.NFastArrayList$FastArrayListJSO", "com.google.gwtmockito.lienzo.stub.FastArrayListJSO");
+        put("com.ait.tooling.nativetools.client.collection.NFastStringMap", "com.google.gwtmockito.lienzo.stub.NFastStringMap");
     }};
     
     @Override
     public Collection<Class<?>> getClassesToStub() {
         return new ArrayList<Class<?>>() {{
-            add(NObjectBaseJSO.class);
-            add(NObjectJSO.class);
-            add(Transform.TransformJSO.class);
-            add(NArrayBaseJSO.class);
-            add(NFastArrayList.class);
-            add(NFastStringMap.class);
         }};
     }
 
@@ -68,8 +65,7 @@ public class OverlayTypeClassLoaderInterceptor implements ClassLoaderInterceptor
 
     @Override
     public boolean intercept(ClassPool pool, String name) throws NotFoundException, CannotCompileException {
-        // Class renamed, let parent loader do the job.
-        return false;
+        return OVERLAY_CLASS_TRANSLATIONS.containsKey(name);
     }
 
     private boolean isOverlayType(ClassPool pool, CtClass clazz) throws NotFoundException, CannotCompileException {

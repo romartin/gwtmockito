@@ -24,11 +24,9 @@ public class GenericClassLoaderInterceptor implements ClassLoaderInterceptor {
     @Override
     public Collection<Class<?>> getClassesToStub() {
         return new ArrayList<Class<?>>() {{
-            add(Layer.class);
-            add(ContainerNode.class);
+            // add(Layer.class);
+            // add(ContainerNode.class);
             add(RootPanel.class);
-            // add(Node.class);
-            // add(Shape.class);
         }};
     }
 
