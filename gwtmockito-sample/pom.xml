@@ -3,7 +3,7 @@
   <parent>
     <groupId>com.google.gwt.gwtmockito</groupId>
     <artifactId>gwtmockito-parent</artifactId>
-    <version>1.1.6</version>
+    <version>1.1.6-lienzo-runner</version>
   </parent>
 
   <artifactId>gwtmockito-sample</artifactId>

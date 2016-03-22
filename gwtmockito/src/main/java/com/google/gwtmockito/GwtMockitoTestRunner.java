@@ -15,15 +15,12 @@
  */
 package com.google.gwtmockito;
 
-import javassist.CannotCompileException;
-import javassist.ClassPool;
-import javassist.CtClass;
-import javassist.CtConstructor;
-import javassist.CtMethod;
-import javassist.Loader;
-import javassist.LoaderClassPath;
-import javassist.NotFoundException;
-import javassist.Translator;
+import com.ait.lienzo.client.core.types.Transform;
+import com.google.gwtmockito.lienzo.ClassLoaderInterceptor;
+import com.google.gwtmockito.lienzo.GenericClassLoaderInterceptor;
+import com.google.gwtmockito.lienzo.NodeClassLoaderInterceptor;
+import com.google.gwtmockito.lienzo.OverlayTypeClassLoaderInterceptor;
+import javassist.*;
 
 import com.google.gwt.user.cellview.client.CellList;
 import com.google.gwt.user.cellview.client.CellTable;
@@ -112,6 +109,13 @@ public class GwtMockitoTestRunner extends BlockJUnit4ClassRunner {
   private final ClassLoader gwtMockitoClassLoader;
   private final Class<?> customLoadedGwtMockito;
 
+  // LIENZO-RUNNER CUSTOM.
+  private static final ClassLoaderInterceptor[] INTERCEPTORS = new ClassLoaderInterceptor[] {
+          new GenericClassLoaderInterceptor(),
+          new NodeClassLoaderInterceptor(),
+          new OverlayTypeClassLoaderInterceptor()
+  };
+  
   /**
    * Creates a test runner which allows final GWT classes to be mocked. Works by reloading the test
    * class using a custom classloader and substituting the reference.
@@ -227,6 +231,12 @@ public class GwtMockitoTestRunner extends BlockJUnit4ClassRunner {
     WithClassesToStub annotation = unitTestClass.getAnnotation(WithClassesToStub.class);
     if (annotation != null) {
       classes.addAll(Arrays.asList(annotation.value()));
+    }
+
+    // LIENZO-RUNNER CUSTOM.
+    for ( ClassLoaderInterceptor interceptor : INTERCEPTORS ) {
+      Collection<Class<?>> toStub = interceptor.getClassesToStub();
+      classes.addAll(toStub);
     }
 
     return classes;
@@ -414,6 +424,14 @@ public class GwtMockitoTestRunner extends BlockJUnit4ClassRunner {
         }
       }
 
+      ClassPool pool = ClassPool.getDefault();
+      for ( ClassLoaderInterceptor interceptor : INTERCEPTORS ) {
+        Class<?> clazz  = interceptor.findClass(pool, name);
+        if ( null != clazz ) {
+          return clazz;
+        }
+      }
+      
       // Otherwise load it with our custom classloader.
       return super.findClass(name);
     }
@@ -421,46 +439,60 @@ public class GwtMockitoTestRunner extends BlockJUnit4ClassRunner {
     @Override
     public void onLoad(ClassPool pool, String name)
         throws NotFoundException, CannotCompileException {
-      CtClass clazz = pool.get(name);
 
-      // Strip final modifiers from the class and all methods to allow them to be mocked
-      clazz.setModifiers(clazz.getModifiers() & ~Modifier.FINAL);
-      for (CtMethod method : clazz.getDeclaredMethods()) {
-        method.setModifiers(method.getModifiers() & ~Modifier.FINAL);
-      }
-
-      // Create stub implementations for certain methods
-      for (CtMethod method : clazz.getDeclaredMethods()) {
-        if (StubGenerator.shouldStub(method, getClassesToStub())) {
-          method.setModifiers(method.getModifiers() & ~Modifier.NATIVE);
-          CtClass returnType = method.getReturnType();
-          // TODO(ekuefler): Handle primitives, voids, and enums in StubGenerator
-          if (returnType.isPrimitive() || returnType.getName().equals("void")) {
-            method.setBody(null);
-          } else if (returnType.isEnum()) {
-            method.setBody(String.format("return %s.values()[0];", returnType.getName()));
-          } else {
-            method.setBody(String.format(
-                "return (%s) com.google.gwtmockito.impl.StubGenerator.invoke("
-                    + "Class.forName(\"%s\"), \"%s\", \"%s\");",
-                method.getReturnType().getName(),
-                method.getReturnType().getName(),
-                clazz.getName(),
-                method.getName()));
-          }
+      // LIENZO-RUNNER CUSTOM.
+      boolean continueLoad = true;
+      for ( ClassLoaderInterceptor interceptor : INTERCEPTORS ) {
+        if ( interceptor.intercept(pool, name) ) {
+          continueLoad = false;
         }
       }
 
-      // Also stub certain constructors
-      for (Class<?> classToStub : getClassesToStub()) {
-        if (classToStub.getName().equals(clazz.getName())) {
-          for (CtConstructor constructor : clazz.getConstructors()) {
-            String parameters = makeNullParameters(
-                clazz.getSuperclass().getConstructors()[0].getParameterTypes());
-            constructor.setBody("super(" + parameters + ");");
+      if ( continueLoad ) {
+
+        CtClass clazz = pool.get(name);
+
+        // Strip final modifiers from the class and all methods to allow them to be mocked
+        clazz.setModifiers(clazz.getModifiers() & ~Modifier.FINAL);
+        for (CtMethod method : clazz.getDeclaredMethods()) {
+          method.setModifiers(method.getModifiers() & ~Modifier.FINAL);
+        }
+
+        // Create stub implementations for certain methods
+        for (CtMethod method : clazz.getDeclaredMethods()) {
+          if (StubGenerator.shouldStub(method, getClassesToStub())) {
+            method.setModifiers(method.getModifiers() & ~Modifier.NATIVE);
+            CtClass returnType = method.getReturnType();
+            // TODO(ekuefler): Handle primitives, voids, and enums in StubGenerator
+            if (returnType.isPrimitive() || returnType.getName().equals("void")) {
+              method.setBody(null);
+            } else if (returnType.isEnum()) {
+              method.setBody(String.format("return %s.values()[0];", returnType.getName()));
+            } else {
+              method.setBody(String.format(
+                      "return (%s) com.google.gwtmockito.impl.StubGenerator.invoke("
+                              + "Class.forName(\"%s\"), \"%s\", \"%s\");",
+                      method.getReturnType().getName(),
+                      method.getReturnType().getName(),
+                      clazz.getName(),
+                      method.getName()));
+            }
           }
         }
+
+        // Also stub certain constructors
+        for (Class<?> classToStub : getClassesToStub()) {
+          if (classToStub.getName().equals(clazz.getName())) {
+            for (CtConstructor constructor : clazz.getConstructors()) {
+              String parameters = makeNullParameters(
+                      clazz.getSuperclass().getConstructors()[0].getParameterTypes());
+              constructor.setBody("super(" + parameters + ");");
+            }
+          }
+        }
+        
       }
+      
     }
 
     private String makeNullParameters(CtClass[] paramClasses) {
