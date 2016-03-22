@@ -15,6 +15,7 @@ public class OverlayTypeClassLoaderInterceptor implements ClassLoaderInterceptor
         put("com.ait.tooling.nativetools.client.NObjectJSO", "com.google.gwtmockito.lienzo.stub.NObjectJSO");
         put("com.ait.tooling.nativetools.client.collection.NFastArrayList", "com.google.gwtmockito.lienzo.stub.NFastArrayList");
         put("com.ait.tooling.nativetools.client.collection.NFastStringMap", "com.google.gwtmockito.lienzo.stub.NFastStringMap");
+        put("com.ait.lienzo.client.core.types.Point2D", "com.google.gwtmockito.lienzo.stub.Point2D");
     }};
     
     @Override
