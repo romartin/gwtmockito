@@ -1,18 +1,10 @@
 package com.google.gwtmockito.lienzo;
 
-import com.ait.lienzo.client.core.types.Transform;
-import com.ait.tooling.nativetools.client.NArrayBaseJSO;
-import com.ait.tooling.nativetools.client.NObjectBaseJSO;
-import com.ait.tooling.nativetools.client.NObjectJSO;
-import com.ait.tooling.nativetools.client.collection.NFastArrayList;
-import com.ait.tooling.nativetools.client.collection.NFastStringMap;
 import javassist.CannotCompileException;
 import javassist.ClassPool;
 import javassist.CtClass;
 import javassist.NotFoundException;
 
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 

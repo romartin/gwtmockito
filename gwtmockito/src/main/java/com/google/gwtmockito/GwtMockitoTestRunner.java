@@ -20,6 +20,7 @@ import com.google.gwt.user.client.ui.*;
 import com.google.gwtmockito.lienzo.ClassLoaderInterceptor;
 import com.google.gwtmockito.lienzo.NodeClassLoaderInterceptor;
 import com.google.gwtmockito.lienzo.OverlayTypeClassLoaderInterceptor;
+import com.google.gwtmockito.lienzo.RectangleClassLoaderInterceptor;
 import javassist.*;
 
 import com.google.gwt.user.cellview.client.CellList;
@@ -85,7 +86,8 @@ public class GwtMockitoTestRunner extends BlockJUnit4ClassRunner {
   // LIENZO-RUNNER CUSTOM.
   private static final ClassLoaderInterceptor[] INTERCEPTORS = new ClassLoaderInterceptor[] {
           new NodeClassLoaderInterceptor(),
-          new OverlayTypeClassLoaderInterceptor()
+          new OverlayTypeClassLoaderInterceptor(),
+          new RectangleClassLoaderInterceptor()
   };
   
   /**

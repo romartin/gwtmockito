@@ -4,9 +4,6 @@ import javassist.CannotCompileException;
 import javassist.ClassPool;
 import javassist.NotFoundException;
 
-import java.io.IOException;
-import java.util.Collection;
-
 public interface ClassLoaderInterceptor {
 
     Class<?> findClass(ClassPool pool, String name) throws ClassNotFoundException;

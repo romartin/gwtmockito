@@ -1,13 +1,6 @@
 package com.google.gwtmockito.lienzo;
 
-import com.ait.lienzo.client.core.shape.ContainerNode;
-import com.ait.lienzo.client.core.shape.Layer;
-import com.ait.lienzo.client.core.shape.Node;
-import com.google.gwt.user.client.ui.RootPanel;
 import javassist.*;
-
-import java.util.ArrayList;
-import java.util.Collection;
 
 public class NodeClassLoaderInterceptor implements ClassLoaderInterceptor {
    

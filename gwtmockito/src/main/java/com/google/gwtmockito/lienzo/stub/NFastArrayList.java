@@ -1,7 +1,5 @@
 package com.google.gwtmockito.lienzo.stub;
 
-import com.ait.tooling.nativetools.client.*;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
