@@ -21,17 +21,10 @@ public class OverlayTypeClassLoaderInterceptor implements ClassLoaderInterceptor
     private static final Map<String, String> OVERLAY_CLASS_TRANSLATIONS = new HashMap<String, String>() {{
         put("com.ait.lienzo.client.core.types.Transform$TransformJSO", "com.google.gwtmockito.lienzo.stub.TransformJSO");
         put("com.ait.tooling.nativetools.client.NObjectJSO", "com.google.gwtmockito.lienzo.stub.NObjectJSO");
-        put("com.ait.tooling.nativetools.client.NArrayBaseJSO", "com.google.gwtmockito.lienzo.stub.NArrayBaseJSO");
-        put("com.ait.tooling.nativetools.client.collection.NFastArrayList$FastArrayListJSO", "com.google.gwtmockito.lienzo.stub.FastArrayListJSO");
+        put("com.ait.tooling.nativetools.client.collection.NFastArrayList", "com.google.gwtmockito.lienzo.stub.NFastArrayList");
         put("com.ait.tooling.nativetools.client.collection.NFastStringMap", "com.google.gwtmockito.lienzo.stub.NFastStringMap");
     }};
     
-    @Override
-    public Collection<Class<?>> getClassesToStub() {
-        return new ArrayList<Class<?>>() {{
-        }};
-    }
-
     @Override
     public Class<?> findClass(ClassPool pool, String name) throws ClassNotFoundException {
 

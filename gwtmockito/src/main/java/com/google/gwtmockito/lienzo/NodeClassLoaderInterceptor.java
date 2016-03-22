@@ -12,13 +12,6 @@ import java.util.Collection;
 public class NodeClassLoaderInterceptor implements ClassLoaderInterceptor {
    
     @Override
-    public Collection<Class<?>> getClassesToStub() {
-        return new ArrayList<Class<?>>() {{
-            add(Node.class);
-        }};
-    }
-
-    @Override
     public Class<?> findClass(ClassPool pool, String name) throws ClassNotFoundException {
         // Let parent loader do the job.
         return null;

@@ -16,8 +16,8 @@
 package com.google.gwtmockito;
 
 import com.ait.lienzo.client.core.types.Transform;
+import com.google.gwt.user.client.ui.*;
 import com.google.gwtmockito.lienzo.ClassLoaderInterceptor;
-import com.google.gwtmockito.lienzo.GenericClassLoaderInterceptor;
 import com.google.gwtmockito.lienzo.NodeClassLoaderInterceptor;
 import com.google.gwtmockito.lienzo.OverlayTypeClassLoaderInterceptor;
 import javassist.*;
@@ -26,33 +26,6 @@ import com.google.gwt.user.cellview.client.CellList;
 import com.google.gwt.user.cellview.client.CellTable;
 import com.google.gwt.user.cellview.client.DataGrid;
 import com.google.gwt.user.client.DOM;
-import com.google.gwt.user.client.ui.AbsolutePanel;
-import com.google.gwt.user.client.ui.CellPanel;
-import com.google.gwt.user.client.ui.ComplexPanel;
-import com.google.gwt.user.client.ui.Composite;
-import com.google.gwt.user.client.ui.DeckLayoutPanel;
-import com.google.gwt.user.client.ui.DeckPanel;
-import com.google.gwt.user.client.ui.DecoratorPanel;
-import com.google.gwt.user.client.ui.DockLayoutPanel;
-import com.google.gwt.user.client.ui.DockPanel;
-import com.google.gwt.user.client.ui.FlowPanel;
-import com.google.gwt.user.client.ui.FocusPanel;
-import com.google.gwt.user.client.ui.HTMLPanel;
-import com.google.gwt.user.client.ui.HTMLTable;
-import com.google.gwt.user.client.ui.HorizontalPanel;
-import com.google.gwt.user.client.ui.Image;
-import com.google.gwt.user.client.ui.LayoutPanel;
-import com.google.gwt.user.client.ui.Panel;
-import com.google.gwt.user.client.ui.PopupPanel;
-import com.google.gwt.user.client.ui.RenderablePanel;
-import com.google.gwt.user.client.ui.ResizeLayoutPanel;
-import com.google.gwt.user.client.ui.SimpleLayoutPanel;
-import com.google.gwt.user.client.ui.SimplePanel;
-import com.google.gwt.user.client.ui.SplitLayoutPanel;
-import com.google.gwt.user.client.ui.StackPanel;
-import com.google.gwt.user.client.ui.UIObject;
-import com.google.gwt.user.client.ui.VerticalPanel;
-import com.google.gwt.user.client.ui.Widget;
 import com.google.gwtmockito.impl.StubGenerator;
 
 import org.junit.runner.Description;
@@ -111,7 +84,6 @@ public class GwtMockitoTestRunner extends BlockJUnit4ClassRunner {
 
   // LIENZO-RUNNER CUSTOM.
   private static final ClassLoaderInterceptor[] INTERCEPTORS = new ClassLoaderInterceptor[] {
-          new GenericClassLoaderInterceptor(),
           new NodeClassLoaderInterceptor(),
           new OverlayTypeClassLoaderInterceptor()
   };
@@ -234,10 +206,7 @@ public class GwtMockitoTestRunner extends BlockJUnit4ClassRunner {
     }
 
     // LIENZO-RUNNER CUSTOM.
-    for ( ClassLoaderInterceptor interceptor : INTERCEPTORS ) {
-      Collection<Class<?>> toStub = interceptor.getClassesToStub();
-      classes.addAll(toStub);
-    }
+    classes.add(RootPanel.class);
 
     return classes;
   }
